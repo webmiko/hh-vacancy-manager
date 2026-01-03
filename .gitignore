@@ -1,8 +1,11 @@
 # Виртуальное окружение
+.venv
 .venv/
 venv/
 env/
 ENV/
+env.bak/
+venv.bak/
 
 # Python
 __pycache__/
@@ -74,18 +77,4 @@ celerybeat.pid
 
 # SageMath parsed files
 *.sage.py
-
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
 
