@@ -19,7 +19,7 @@ HH Vacancy Manager — это консольное приложение для �
 - ✅ Фильтрация по валюте RUR (рубли)
 - ✅ Предотвращение дублирования вакансий при сохранении
 - ✅ Полная типизация кода
-- ✅ Покрытие тестами более 95%
+- ✅ Покрытие тестами 87% (107 тестов)
 - ✅ Соответствие принципам Zen of Python
 - ✅ Обработка ошибок с логированием
 - ✅ Проверка безопасности (защита от утечки конфиденциальных данных)
@@ -157,15 +157,19 @@ hh-vacancy-manager/
 │   ├── test_utils.py         # Тесты для утилит
 │   ├── test_user_interface.py # Тесты для интерфейса
 │   ├── test_main.py          # Тесты для main.py
+│   ├── test_security_utils.py # Тесты для утилит безопасности
 │   └── conftest.py           # Конфигурация pytest
 ├── data/                      # Данные (вакансии сохраняются здесь)
 │   └── vacancies.json        # Файл с сохраненными вакансиями
 ├── logs/                      # Логи приложения
 ├── pyproject.toml             # Конфигурация Poetry и зависимостей
 ├── poetry.lock                # Зафиксированные версии зависимостей
+├── setup.cfg                  # Конфигурация flake8
+├── .python-version            # Версия Python для проекта
 ├── .env.example               # Шаблон для переменных окружения
 ├── .gitignore                 # Игнорируемые файлы Git
 ├── README.md                  # Документация проекта
+├── ПЛАН-ПРОЕКТА.md            # План разработки проекта
 └── ZEN_OF_PYTHON_ANALYSIS.md # Анализ соответствия Zen of Python
 ```
 
@@ -189,14 +193,17 @@ poetry run pytest --cov=src --cov-report=html
 
 ### Покрытие кода
 
-Проект имеет покрытие тестами **более 95%**:
+Проект имеет покрытие тестами **87%** (107 тестов, все проходят):
 
-- `src/api/hh_api.py`: 99%
-- `src/user_interface.py`: 99%
-- `src/vacancy/vacancy.py`: 96%
-- `src/storage/json_saver.py`: 95%
-- `src/utils/vacancy_utils.py`: 91%
+- `src/vacancy/vacancy.py`: 94%
+- `src/api/hh_api.py`: 90%
+- `src/user_interface.py`: 90%
+- `src/storage/json_saver.py`: 84%
 - `src/utils/input_utils.py`: 100%
+- `src/utils/vacancy_utils.py`: 75%
+- `src/utils/security_utils.py`: 75%
+- `src/api/base.py`: 80%
+- `src/storage/base.py`: 77%
 
 ## Разработка
 
@@ -214,7 +221,8 @@ poetry run isort src/ tests/
 
 ```bash
 # Проверка стиля кода с помощью flake8
-poetry run flake8 src/ tests/ --max-line-length=119
+# (настройки берутся из setup.cfg)
+poetry run flake8 src/ tests/
 
 # Проверка типов с помощью mypy
 poetry run mypy src/
