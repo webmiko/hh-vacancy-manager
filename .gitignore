@@ -53,17 +53,8 @@ dmypy.json
 # Исключение для README.md (можно добавить при необходимости через git add -f)
 !README.md
 
-# Временные файлы отчетов и проверок
-*ОТЧЕТ*.md
-*отчет*.md
-*REPORT*.md
-*report*.md
-*ПРОВЕРК*.md
-*проверк*.md
-*CHECK*.md
-*check*.md
+# Временные файлы
 *.tmp
-temp_*.md
 
 # Jupyter Notebook
 .ipynb_checkpoints
