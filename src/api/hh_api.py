@@ -109,7 +109,13 @@ class HeadHunterAPI(APIBase):
             logger.info(f"Успешное подключение к API hh.ru. Статус: {response.status_code}")
 
         except requests.RequestException as e:
-            logger.error(f"Ошибка подключения к API hh.ru: {type(e).__name__} - {e}")
+            # Детальное логирование HTTP ошибок для лучшей отладки
+            error_msg = f"Ошибка подключения к API hh.ru: {type(e).__name__} - {e}"
+            if hasattr(e, "response") and e.response is not None:
+                status_code = e.response.status_code
+                url = e.response.url
+                error_msg += f" | HTTP {status_code} | URL: {url}"
+            logger.error(error_msg)
             raise ConnectionError(f"Не удалось подключиться к API hh.ru: {e}") from e
 
     def get_vacancies(self, keyword: str) -> List[Dict[str, Any]]:
@@ -189,7 +195,13 @@ class HeadHunterAPI(APIBase):
             return all_vacancies
 
         except requests.RequestException as e:
-            logger.error(f"Ошибка при запросе к API hh.ru: {type(e).__name__} - {e}")
+            # Детальное логирование HTTP ошибок для лучшей отладки
+            error_msg = f"Ошибка при запросе к API hh.ru: {type(e).__name__} - {e}"
+            if hasattr(e, "response") and e.response is not None:
+                status_code = e.response.status_code
+                url = e.response.url
+                error_msg += f" | HTTP {status_code} | URL: {url}"
+            logger.error(error_msg)
             return DEFAULT_RETURN_VALUE
         except KeyError as e:
             logger.error(f"Ошибка: отсутствует ключ в данных API: {e}")

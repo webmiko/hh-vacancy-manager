@@ -185,7 +185,18 @@ class JSONSaver(FileSaverBase):
 
         Returns:
             Словарь с данными о вакансии
+
+        Raises:
+            ValueError: Если передан объект, который не является экземпляром Vacancy
         """
+        # Проверка типа для более понятных ошибок
+        from src.vacancy.vacancy import Vacancy
+
+        if not isinstance(vacancy, Vacancy):
+            error_msg = f"Ожидается объект Vacancy, получен: {type(vacancy)}"
+            logger.error(f"Ошибка типа при преобразовании вакансии: {error_msg}")
+            raise ValueError(error_msg)
+
         return {
             "name": vacancy.name,
             "url": vacancy.url,
