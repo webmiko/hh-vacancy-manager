@@ -1,0 +1,91 @@
+# Виртуальное окружение
+.venv/
+venv/
+env/
+ENV/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+
+# Логи
+*.log
+logs/
+
+# Данные (если не нужно коммитить)
+# data/*.json
+# data/*.csv
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Переменные окружения
+.env
+.env.local
+.env.*.local
+
+# Отчеты и тесты
+reports/
+temp_reports/
+.coverage
+.coverage.*
+.pytest_cache/
+# coverage.json и COVERAGE.md оставляем для отслеживания покрытия
+.tox/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Markdown файлы (не коммитить по умолчанию)
+*.md
+# Исключение для README.md (можно добавить при необходимости через git add -f)
+!README.md
+
+# Временные файлы отчетов и проверок
+*ОТЧЕТ*.md
+*отчет*.md
+*REPORT*.md
+*report*.md
+*ПРОВЕРК*.md
+*проверк*.md
+*CHECK*.md
+*check*.md
+*.tmp
+temp_*.md
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
