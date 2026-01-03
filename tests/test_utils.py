@@ -81,29 +81,22 @@ class TestVacancyUtils:
 
         assert filtered == vacancies
 
-    def test_sort_vacancies_by_salary(self) -> None:
+    def test_sort_vacancies_by_salary(self, vacancies_with_salaries: List[Vacancy]) -> None:
         """Тест сортировки вакансий по зарплате."""
-        vacancy1 = Vacancy("Low", "https://test1.ru", {"from": 50000, "currency": "RUR"}, "Desc")
-        vacancy2 = Vacancy("High", "https://test2.ru", {"from": 200000, "currency": "RUR"}, "Desc")
-        vacancy3 = Vacancy("Medium", "https://test3.ru", {"from": 100000, "currency": "RUR"}, "Desc")
+        sorted_vacancies = sort_vacancies_by_salary(vacancies_with_salaries, reverse=True)
 
-        vacancies = [vacancy1, vacancy2, vacancy3]
-        sorted_vacancies = sort_vacancies_by_salary(vacancies, reverse=True)
+        assert sorted_vacancies[0] == vacancies_with_salaries[2]  # Самая высокая зарплата
+        assert sorted_vacancies[1] == vacancies_with_salaries[1]
+        assert sorted_vacancies[2] == vacancies_with_salaries[0]  # Самая низкая зарплата
 
-        assert sorted_vacancies[0] == vacancy2  # Самая высокая зарплата
-        assert sorted_vacancies[1] == vacancy3
-        assert sorted_vacancies[2] == vacancy1  # Самая низкая зарплата
-
-    def test_sort_vacancies_by_salary_ascending(self) -> None:
+    def test_sort_vacancies_by_salary_ascending(self, vacancies_with_salaries: List[Vacancy]) -> None:
         """Тест сортировки вакансий по зарплате по возрастанию."""
-        vacancy1 = Vacancy("Low", "https://test1.ru", {"from": 50000, "currency": "RUR"}, "Desc")
-        vacancy2 = Vacancy("High", "https://test2.ru", {"from": 200000, "currency": "RUR"}, "Desc")
-
-        vacancies = [vacancy2, vacancy1]
+        # Используем только первые две вакансии из фикстуры
+        vacancies = [vacancies_with_salaries[2], vacancies_with_salaries[0]]
         sorted_vacancies = sort_vacancies_by_salary(vacancies, reverse=False)
 
-        assert sorted_vacancies[0] == vacancy1
-        assert sorted_vacancies[1] == vacancy2
+        assert sorted_vacancies[0] == vacancies_with_salaries[0]
+        assert sorted_vacancies[1] == vacancies_with_salaries[2]
 
     def test_sort_vacancies_by_salary_empty(self) -> None:
         """Тест сортировки пустого списка."""
@@ -147,3 +140,63 @@ class TestVacancyUtils:
 
         result = get_top_vacancies([], 5)
         assert result == []
+
+    def test_sort_vacancies_by_salary_type_error(self) -> None:
+        """Тест обработки TypeError при сортировке (критично для пользователя)."""
+        # Создаем объекты, которые не поддерживают сравнение
+        from unittest.mock import Mock
+
+        invalid_vacancy1 = Mock()
+        invalid_vacancy2 = Mock()
+        # Удаляем методы сравнения, чтобы вызвать TypeError
+        del invalid_vacancy1.__lt__
+        del invalid_vacancy1.__gt__
+
+        vacancies = [invalid_vacancy1, invalid_vacancy2]
+
+        # Должно вернуть пустой список вместо падения программы
+        result = sort_vacancies_by_salary(vacancies, reverse=True)
+
+        assert result == []
+
+    def test_sort_vacancies_by_salary_attribute_error(self) -> None:
+        """Тест обработки AttributeError при сортировке (критично для пользователя)."""
+        # Создаем объекты, которые вызывают AttributeError при сравнении
+        from unittest.mock import Mock
+
+        invalid_vacancy1 = Mock()
+        invalid_vacancy2 = Mock()
+
+        # Настраиваем моки так, чтобы сравнение вызывало AttributeError
+        def raise_attribute_error(*args, **kwargs):
+            raise AttributeError("Missing attribute for comparison")
+
+        invalid_vacancy1.__lt__ = raise_attribute_error
+        invalid_vacancy1.__gt__ = raise_attribute_error
+
+        vacancies = [invalid_vacancy1, invalid_vacancy2]
+
+        # Должно вернуть пустой список вместо падения программы
+        result = sort_vacancies_by_salary(vacancies, reverse=True)
+
+        assert result == []
+
+    def test_filter_vacancies_by_keywords_missing_description(self) -> None:
+        """Тест фильтрации вакансий без атрибута description (критично для пользователя)."""
+        from unittest.mock import Mock
+
+        # Создаем вакансию без description
+        vacancy_no_desc = Mock()
+        vacancy_no_desc.description = None
+        del vacancy_no_desc.description  # Удаляем атрибут
+
+        vacancy_with_desc = Vacancy("Test", "https://test.ru", None, "Python Django")
+
+        vacancies = [vacancy_no_desc, vacancy_with_desc]
+
+        # Должно обработать ошибку и продолжить работу
+        filtered = filter_vacancies_by_keywords(vacancies, ["Python"])
+
+        # Должна остаться только вакансия с description
+        assert len(filtered) == 1
+        assert filtered[0] == vacancy_with_desc

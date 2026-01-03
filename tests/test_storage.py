@@ -57,188 +57,192 @@ class TestJSONSaver:
         """Тест, что JSONSaver наследуется от FileSaverBase."""
         assert issubclass(JSONSaver, FileSaverBase)
 
-    def test_add_vacancy(self, temp_json_file: Path, vacancy_object: Vacancy) -> None:
+    def test_add_vacancy(self, json_saver: JSONSaver, vacancy_object: Vacancy) -> None:
         """Тест добавления вакансии в файл."""
-        saver = JSONSaver(temp_json_file.name)
-        saver._file_path = temp_json_file
+        json_saver.add_vacancy(vacancy_object)
 
-        saver.add_vacancy(vacancy_object)
+        assert json_saver._file_path.exists()
 
-        assert temp_json_file.exists()
-
-        with open(temp_json_file, "r", encoding="utf-8") as f:
+        with open(json_saver._file_path, "r", encoding="utf-8") as f:
             data = json.load(f)
 
         assert len(data) == 1
         assert data[0]["name"] == vacancy_object.name
         assert data[0]["url"] == vacancy_object.url
 
-    def test_add_vacancy_duplicate(self, temp_json_file: Path, vacancy_object: Vacancy) -> None:
+    def test_add_vacancy_duplicate(self, json_saver: JSONSaver, vacancy_object: Vacancy) -> None:
         """Тест предотвращения дублирования вакансий."""
-        saver = JSONSaver(temp_json_file.name)
-        saver._file_path = temp_json_file
+        json_saver.add_vacancy(vacancy_object)
+        json_saver.add_vacancy(vacancy_object)  # Попытка добавить ту же вакансию
 
-        saver.add_vacancy(vacancy_object)
-        saver.add_vacancy(vacancy_object)  # Попытка добавить ту же вакансию
-
-        with open(temp_json_file, "r", encoding="utf-8") as f:
+        with open(json_saver._file_path, "r", encoding="utf-8") as f:
             data = json.load(f)
 
         assert len(data) == 1  # Дубликат не должен быть добавлен
 
-    def test_get_vacancies_empty_file(self, temp_json_file: Path) -> None:
+    def test_get_vacancies_empty_file(self, json_saver: JSONSaver) -> None:
         """Тест получения вакансий из пустого файла."""
-        saver = JSONSaver(temp_json_file.name)
-        saver._file_path = temp_json_file
-
-        vacancies = saver.get_vacancies()
+        vacancies = json_saver.get_vacancies()
 
         assert vacancies == []
 
-    def test_get_vacancies_with_data(self, temp_json_file: Path, vacancy_object: Vacancy) -> None:
+    def test_get_vacancies_with_data(self, json_saver: JSONSaver, vacancy_object: Vacancy) -> None:
         """Тест получения вакансий из файла с данными."""
-        saver = JSONSaver(temp_json_file.name)
-        saver._file_path = temp_json_file
-
-        saver.add_vacancy(vacancy_object)
-        vacancies = saver.get_vacancies()
+        json_saver.add_vacancy(vacancy_object)
+        vacancies = json_saver.get_vacancies()
 
         assert len(vacancies) == 1
         assert vacancies[0]["name"] == vacancy_object.name
 
-    def test_get_vacancies_filter_by_keywords(self, temp_json_file: Path) -> None:
+    def test_get_vacancies_filter_by_keywords(self, json_saver: JSONSaver) -> None:
         """Тест фильтрации вакансий по ключевым словам."""
-        saver = JSONSaver(temp_json_file.name)
-        saver._file_path = temp_json_file
-
         vacancy1 = Vacancy("Python Developer", "https://test1.ru", None, "Python Django Flask")
         vacancy2 = Vacancy("Java Developer", "https://test2.ru", None, "Java Spring")
 
-        saver.add_vacancy(vacancy1)
-        saver.add_vacancy(vacancy2)
+        json_saver.add_vacancy(vacancy1)
+        json_saver.add_vacancy(vacancy2)
 
-        filtered = saver.get_vacancies(filter_words=["Python"])
+        filtered = json_saver.get_vacancies(filter_words=["Python"])
 
         assert len(filtered) == 1
         assert filtered[0]["name"] == "Python Developer"
 
-    def test_get_vacancies_filter_by_salary(self, temp_json_file: Path) -> None:
+    def test_get_vacancies_filter_by_salary(self, json_saver: JSONSaver) -> None:
         """Тест фильтрации вакансий по диапазону зарплат."""
-        saver = JSONSaver(temp_json_file.name)
-        saver._file_path = temp_json_file
-
         vacancy1 = Vacancy("High Salary", "https://test1.ru", {"from": 200000, "currency": "RUR"}, "Desc")
         vacancy2 = Vacancy("Low Salary", "https://test2.ru", {"from": 50000, "currency": "RUR"}, "Desc")
 
-        saver.add_vacancy(vacancy1)
-        saver.add_vacancy(vacancy2)
+        json_saver.add_vacancy(vacancy1)
+        json_saver.add_vacancy(vacancy2)
 
-        filtered = saver.get_vacancies(salary_from=100000, salary_to=300000)
+        filtered = json_saver.get_vacancies(salary_from=100000, salary_to=300000)
 
         assert len(filtered) == 1
         assert filtered[0]["name"] == "High Salary"
 
-    def test_delete_vacancy(self, temp_json_file: Path, vacancy_object: Vacancy) -> None:
+    def test_delete_vacancy(self, json_saver: JSONSaver, vacancy_object: Vacancy) -> None:
         """Тест удаления вакансии из файла."""
-        saver = JSONSaver(temp_json_file.name)
-        saver._file_path = temp_json_file
+        json_saver.add_vacancy(vacancy_object)
+        json_saver.delete_vacancy(vacancy_object)
 
-        saver.add_vacancy(vacancy_object)
-        saver.delete_vacancy(vacancy_object)
-
-        vacancies = saver.get_vacancies()
+        vacancies = json_saver.get_vacancies()
         assert len(vacancies) == 0
 
-    def test_delete_vacancy_not_found(self, temp_json_file: Path, vacancy_object: Vacancy) -> None:
+    def test_delete_vacancy_not_found(self, json_saver: JSONSaver, vacancy_object: Vacancy) -> None:
         """Тест удаления несуществующей вакансии."""
-        saver = JSONSaver(temp_json_file.name)
-        saver._file_path = temp_json_file
-
         with pytest.raises(ValueError, match="не найдена"):
-            saver.delete_vacancy(vacancy_object)
+            json_saver.delete_vacancy(vacancy_object)
 
-    def test_load_vacancies_invalid_json(self, temp_json_file: Path) -> None:
+    def test_load_vacancies_invalid_json(self, json_saver: JSONSaver) -> None:
         """Тест обработки поврежденного JSON файла."""
-        saver = JSONSaver(temp_json_file.name)
-        saver._file_path = temp_json_file
-
         # Создаем файл с невалидным JSON
-        with open(temp_json_file, "w", encoding="utf-8") as f:
+        with open(json_saver._file_path, "w", encoding="utf-8") as f:
             f.write("invalid json content")
 
-        vacancies = saver.get_vacancies()
+        vacancies = json_saver.get_vacancies()
 
         assert vacancies == []
 
-    def test_load_vacancies_not_list(self, temp_json_file: Path) -> None:
+    def test_load_vacancies_not_list(self, json_saver: JSONSaver) -> None:
         """Тест обработки файла, содержащего не список."""
-        saver = JSONSaver(temp_json_file.name)
-        saver._file_path = temp_json_file
-
         # Создаем файл с JSON объектом (не список)
-        with open(temp_json_file, "w", encoding="utf-8") as f:
+        with open(json_saver._file_path, "w", encoding="utf-8") as f:
             json.dump({"key": "value"}, f)
 
-        vacancies = saver.get_vacancies()
+        vacancies = json_saver.get_vacancies()
 
         assert vacancies == []
 
-    def test_save_vacancies_permission_error(self, temp_json_file: Path, vacancy_object: Vacancy) -> None:
+    def test_save_vacancies_permission_error(self, json_saver: JSONSaver) -> None:
         """Тест обработки ошибки прав доступа при сохранении."""
-        saver = JSONSaver(temp_json_file.name)
-        saver._file_path = temp_json_file
-
         # Создаем файл и делаем его только для чтения (на Unix)
         import os
 
-        temp_json_file.touch()
+        json_saver._file_path.touch()
         try:
-            os.chmod(temp_json_file, 0o444)  # Только чтение
+            os.chmod(json_saver._file_path, 0o444)  # Только чтение
 
             with pytest.raises(IOError):
-                saver._save_vacancies([{"name": "Test", "url": "https://test.ru", "salary": None, "description": ""}])
+                json_saver._save_vacancies([{"name": "Test", "url": "https://test.ru", "salary": None, "description": ""}])
         finally:
-            os.chmod(temp_json_file, 0o644)  # Восстанавливаем права
+            os.chmod(json_saver._file_path, 0o644)  # Восстанавливаем права
 
-    def test_load_vacancies_permission_error(self, temp_json_file: Path) -> None:
+    def test_load_vacancies_permission_error(self, json_saver: JSONSaver) -> None:
         """Тест обработки ошибки прав доступа при чтении."""
-        saver = JSONSaver(temp_json_file.name)
-        saver._file_path = temp_json_file
-
         # Создаем файл и делаем его недоступным для чтения
         import os
 
-        temp_json_file.touch()
+        json_saver._file_path.touch()
         try:
-            os.chmod(temp_json_file, 0o000)  # Нет прав
+            os.chmod(json_saver._file_path, 0o000)  # Нет прав
 
-            vacancies = saver._load_vacancies()
+            vacancies = json_saver._load_vacancies()
 
             assert vacancies == []
         finally:
-            os.chmod(temp_json_file, 0o644)  # Восстанавливаем права
+            os.chmod(json_saver._file_path, 0o644)  # Восстанавливаем права
 
-    def test_add_vacancy_invalid_object(self, temp_json_file: Path) -> None:
+    def test_load_vacancies_memory_error(self, json_saver: JSONSaver) -> None:
+        """Тест обработки MemoryError при загрузке (критично для пользователя)."""
+        # Мокаем open чтобы вызвать MemoryError
+        from unittest.mock import mock_open, patch
+
+        with patch("builtins.open", mock_open(read_data="[]")):
+            with patch("json.load", side_effect=MemoryError("Out of memory")):
+                vacancies = json_saver._load_vacancies()
+
+                # Должно вернуть пустой список вместо падения программы
+                assert vacancies == []
+
+    def test_load_vacancies_unexpected_exception(self, json_saver: JSONSaver) -> None:
+        """Тест обработки неожиданного исключения при загрузке (критично для пользователя)."""
+        # Мокаем open чтобы вызвать неожиданное исключение
+        from unittest.mock import mock_open, patch
+
+        with patch("builtins.open", mock_open(read_data="[]")):
+            with patch("json.load", side_effect=RuntimeError("Unexpected error")):
+                vacancies = json_saver._load_vacancies()
+
+                # Должно вернуть пустой список вместо падения программы
+                assert vacancies == []
+
+    def test_save_vacancies_memory_error(self, json_saver: JSONSaver, vacancy_object: Vacancy) -> None:
+        """Тест обработки MemoryError при сохранении (критично для пользователя)."""
+        from unittest.mock import mock_open, patch
+
+        json_saver.add_vacancy(vacancy_object)
+
+        # Мокаем open чтобы вызвать MemoryError при сохранении
+        with patch("builtins.open", mock_open()) as mock_file:
+            with patch("json.dump", side_effect=MemoryError("Out of memory")):
+                with pytest.raises(IOError, match="Не удалось сохранить"):
+                    json_saver._save_vacancies([{"name": "Test", "url": "https://test.ru", "salary": None, "description": ""}])
+
+    def test_save_vacancies_unexpected_exception(self, json_saver: JSONSaver) -> None:
+        """Тест обработки неожиданного исключения при сохранении (критично для пользователя)."""
+        from unittest.mock import mock_open, patch
+
+        # Мокаем open чтобы вызвать неожиданное исключение
+        with patch("builtins.open", mock_open()) as mock_file:
+            with patch("json.dump", side_effect=RuntimeError("Unexpected error")):
+                with pytest.raises(IOError, match="Не удалось сохранить"):
+                    json_saver._save_vacancies([{"name": "Test", "url": "https://test.ru", "salary": None, "description": ""}])
+
+    def test_add_vacancy_invalid_object(self, json_saver: JSONSaver) -> None:
         """Тест добавления невалидного объекта вакансии."""
-        saver = JSONSaver(temp_json_file.name)
-        saver._file_path = temp_json_file
-
         invalid_vacancy = Mock()
         del invalid_vacancy.name  # Удаляем атрибут name
 
         with pytest.raises(ValueError):
-            saver.add_vacancy(invalid_vacancy)
+            json_saver.add_vacancy(invalid_vacancy)
 
-    def test_delete_vacancy_invalid_object(self, temp_json_file: Path) -> None:
+    def test_delete_vacancy_invalid_object(self, json_saver: JSONSaver) -> None:
         """Тест удаления невалидного объекта вакансии."""
-        saver = JSONSaver(temp_json_file.name)
-        saver._file_path = temp_json_file
-
         invalid_vacancy = Mock()
         del invalid_vacancy.name  # Удаляем атрибут name
 
         with pytest.raises(ValueError):
-            saver.delete_vacancy(invalid_vacancy)
+            json_saver.delete_vacancy(invalid_vacancy)
 
     def test_matches_salary_range_no_salary(self) -> None:
         """Тест проверки диапазона зарплат без зарплаты."""
@@ -280,38 +284,29 @@ class TestJSONSaver:
         assert saver._matches_salary_range(salary, None, 200000) is True
         assert saver._matches_salary_range(salary, None, 100000) is False
 
-    def test_get_vacancies_no_filter(self, temp_json_file: Path, vacancy_object: Vacancy) -> None:
+    def test_get_vacancies_no_filter(self, json_saver: JSONSaver, vacancy_object: Vacancy) -> None:
         """Тест получения вакансий без фильтров."""
-        saver = JSONSaver(temp_json_file.name)
-        saver._file_path = temp_json_file
-
-        saver.add_vacancy(vacancy_object)
-        vacancies = saver.get_vacancies()
+        json_saver.add_vacancy(vacancy_object)
+        vacancies = json_saver.get_vacancies()
 
         assert len(vacancies) == 1
 
-    def test_get_vacancies_exception_handling(self, temp_json_file: Path) -> None:
+    def test_get_vacancies_exception_handling(self, json_saver: JSONSaver) -> None:
         """Тест обработки исключений при загрузке вакансий."""
-        saver = JSONSaver(temp_json_file.name)
-        saver._file_path = temp_json_file
-
         # Создаем файл с невалидным JSON
-        with open(temp_json_file, "w", encoding="utf-8") as f:
+        with open(json_saver._file_path, "w", encoding="utf-8") as f:
             f.write("{invalid json}")
 
-        vacancies = saver._load_vacancies()
+        vacancies = json_saver._load_vacancies()
 
         assert vacancies == []
 
-    def test_load_vacancies_empty_content(self, temp_json_file: Path) -> None:
+    def test_load_vacancies_empty_content(self, json_saver: JSONSaver) -> None:
         """Тест обработки файла с пустым содержимым."""
-        saver = JSONSaver(temp_json_file.name)
-        saver._file_path = temp_json_file
-
         # Создаем пустой файл
-        temp_json_file.touch()
+        json_saver._file_path.touch()
 
-        vacancies = saver._load_vacancies()
+        vacancies = json_saver._load_vacancies()
 
         assert vacancies == []
 

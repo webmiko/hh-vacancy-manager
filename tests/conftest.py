@@ -13,6 +13,8 @@ from unittest.mock import Mock
 import pytest
 
 # 3. Импорты из проекта
+from src.api.hh_api import HeadHunterAPI
+from src.storage.json_saver import JSONSaver
 from src.vacancy.vacancy import Vacancy
 
 # 4. Константы модуля
@@ -145,3 +147,69 @@ def mock_api_response(sample_vacancies_list: List[Dict[str, Any]]) -> Mock:
     }
     mock_response.raise_for_status = Mock()
     return mock_response
+
+
+@pytest.fixture
+def headhunter_api() -> HeadHunterAPI:
+    """
+    Фикстура с экземпляром HeadHunterAPI.
+
+    Returns:
+        Экземпляр HeadHunterAPI
+    """
+    return HeadHunterAPI()
+
+
+@pytest.fixture
+def json_saver(temp_json_file: Path) -> JSONSaver:
+    """
+    Фикстура с экземпляром JSONSaver, использующим временный файл.
+
+    Args:
+        temp_json_file: Фикстура с временным JSON файлом
+
+    Returns:
+        Экземпляр JSONSaver с настроенным временным файлом
+    """
+    saver = JSONSaver(temp_json_file.name)
+    saver._file_path = temp_json_file
+    return saver
+
+
+@pytest.fixture
+def vacancies_with_salaries() -> List[Vacancy]:
+    """
+    Фикстура со списком вакансий с разными зарплатами для тестов сортировки и сравнения.
+
+    Returns:
+        Список объектов Vacancy с разными зарплатами
+    """
+    return [
+        Vacancy("Low Salary", "https://test1.ru", {"from": 50000, "currency": "RUR"}, "Description"),
+        Vacancy("Medium Salary", "https://test2.ru", {"from": 100000, "currency": "RUR"}, "Description"),
+        Vacancy("High Salary", "https://test3.ru", {"from": 200000, "currency": "RUR"}, "Description"),
+    ]
+
+
+@pytest.fixture
+def vacancy_no_salary() -> Vacancy:
+    """
+    Фикстура с вакансией без зарплаты.
+
+    Returns:
+        Объект Vacancy без зарплаты
+    """
+    return Vacancy("No Salary", "https://test.ru", None, "Description")
+
+
+@pytest.fixture
+def vacancy_with_salary_range() -> Vacancy:
+    """
+    Фикстура с вакансией с диапазоном зарплат.
+
+    Returns:
+        Объект Vacancy с диапазоном зарплат
+    """
+    return Vacancy(
+        "Range Salary", "https://test.ru", {"from": 100000, "to": 150000, "currency": "RUR"}, "Description"
+    )

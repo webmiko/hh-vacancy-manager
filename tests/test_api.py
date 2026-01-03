@@ -53,29 +53,26 @@ class TestHeadHunterAPI:
         assert issubclass(HeadHunterAPI, APIBase)
 
     @patch("src.api.hh_api.requests.get")
-    def test_connect_success(self, mock_get: Mock, mock_api_response: Mock) -> None:
+    def test_connect_success(self, mock_get: Mock, mock_api_response: Mock, headhunter_api: HeadHunterAPI) -> None:
         """Тест успешного подключения к API."""
         mock_get.return_value = mock_api_response
 
-        api = HeadHunterAPI()
-        api.connect()
+        headhunter_api.connect()
 
         mock_get.assert_called_once()
         mock_api_response.raise_for_status.assert_called_once()
 
     @patch("src.api.hh_api.requests.get")
-    def test_connect_failure(self, mock_get: Mock) -> None:
+    def test_connect_failure(self, mock_get: Mock, headhunter_api: HeadHunterAPI) -> None:
         """Тест ошибки подключения к API."""
         mock_get.side_effect = requests.RequestException("Connection error")
 
-        api = HeadHunterAPI()
-
         with pytest.raises(ConnectionError):
-            api.connect()
+            headhunter_api.connect()
 
     @patch("src.api.hh_api.requests.get")
     def test_get_vacancies_success(
-        self, mock_get: Mock, mock_api_response: Mock, sample_vacancies_list: List[Dict[str, Any]]
+        self, mock_get: Mock, mock_api_response: Mock, sample_vacancies_list: List[Dict[str, Any]], headhunter_api: HeadHunterAPI
     ) -> None:
         """Тест успешного получения вакансий."""
         # Ответ для connect()
@@ -103,8 +100,7 @@ class TestHeadHunterAPI:
 
         mock_get.side_effect = [connect_response, response_page1, response_page2]
 
-        api = HeadHunterAPI()
-        vacancies = api.get_vacancies("Python")
+        vacancies = headhunter_api.get_vacancies("Python")
 
         # После фильтрации по валюте RUR количество может быть меньше
         # Проверяем, что все возвращенные вакансии имеют RUR или None в salary
@@ -116,26 +112,24 @@ class TestHeadHunterAPI:
         assert mock_get.call_count >= 2
 
     @patch("src.api.hh_api.requests.get")
-    def test_get_vacancies_empty_keyword(self, mock_get: Mock) -> None:
+    def test_get_vacancies_empty_keyword(self, mock_get: Mock, headhunter_api: HeadHunterAPI) -> None:
         """Тест получения вакансий с пустым ключевым словом."""
-        api = HeadHunterAPI()
-        vacancies = api.get_vacancies("")
+        vacancies = headhunter_api.get_vacancies("")
 
         assert vacancies == []
         mock_get.assert_not_called()
 
     @patch("src.api.hh_api.requests.get")
-    def test_get_vacancies_connection_error(self, mock_get: Mock) -> None:
+    def test_get_vacancies_connection_error(self, mock_get: Mock, headhunter_api: HeadHunterAPI) -> None:
         """Тест обработки ошибки подключения при получении вакансий."""
         mock_get.side_effect = requests.RequestException("Connection error")
 
-        api = HeadHunterAPI()
-        vacancies = api.get_vacancies("Python")
+        vacancies = headhunter_api.get_vacancies("Python")
 
         assert vacancies == []
 
     @patch("src.api.hh_api.requests.get")
-    def test_get_vacancies_invalid_json(self, mock_get: Mock) -> None:
+    def test_get_vacancies_invalid_json(self, mock_get: Mock, headhunter_api: HeadHunterAPI) -> None:
         """Тест обработки невалидного JSON ответа."""
         mock_response = Mock()
         mock_response.status_code = 200
@@ -143,13 +137,12 @@ class TestHeadHunterAPI:
         mock_response.raise_for_status = Mock()
         mock_get.return_value = mock_response
 
-        api = HeadHunterAPI()
-        vacancies = api.get_vacancies("Python")
+        vacancies = headhunter_api.get_vacancies("Python")
 
         assert vacancies == []
 
     @patch("src.api.hh_api.requests.get")
-    def test_get_vacancies_no_items_key(self, mock_get: Mock) -> None:
+    def test_get_vacancies_no_items_key(self, mock_get: Mock, headhunter_api: HeadHunterAPI) -> None:
         """Тест обработки ответа без ключа 'items'."""
         mock_response = Mock()
         mock_response.status_code = 200
@@ -157,13 +150,12 @@ class TestHeadHunterAPI:
         mock_response.raise_for_status = Mock()
         mock_get.return_value = mock_response
 
-        api = HeadHunterAPI()
-        vacancies = api.get_vacancies("Python")
+        vacancies = headhunter_api.get_vacancies("Python")
 
         assert vacancies == []
 
     @patch("src.api.hh_api.requests.get")
-    def test_get_vacancies_pagination(self, mock_get: Mock, sample_vacancies_list: List[Dict[str, Any]]) -> None:
+    def test_get_vacancies_pagination(self, mock_get: Mock, sample_vacancies_list: List[Dict[str, Any]], headhunter_api: HeadHunterAPI) -> None:
         """Тест пагинации при получении вакансий."""
         # Ответ для connect()
         connect_response = Mock()
@@ -202,17 +194,14 @@ class TestHeadHunterAPI:
 
         mock_get.side_effect = [connect_response, response_page1, response_page2, response_page3]
 
-        api = HeadHunterAPI()
-        vacancies = api.get_vacancies("Python")
+        vacancies = headhunter_api.get_vacancies("Python")
 
         assert len(vacancies) == 4  # 2 вакансии на каждой странице
         assert mock_get.call_count == 4
 
-    def test_filter_by_currency(self) -> None:
+    def test_filter_by_currency(self, headhunter_api: HeadHunterAPI) -> None:
         """Тест фильтрации вакансий по валюте."""
         from src.api.hh_api import RUR_CURRENCY
-
-        api = HeadHunterAPI()
 
         items = [
             {"name": "Test1", "salary": {"from": 100000, "currency": "RUR"}},
@@ -221,7 +210,7 @@ class TestHeadHunterAPI:
             {"name": "Test4", "salary": {"from": 150000, "currency": "RUR"}},
         ]
 
-        filtered = api._filter_by_currency(items, RUR_CURRENCY)
+        filtered = headhunter_api._filter_by_currency(items, RUR_CURRENCY)
 
         assert len(filtered) == 3  # Test1, Test3, Test4
         assert filtered[0]["name"] == "Test1"
@@ -229,7 +218,7 @@ class TestHeadHunterAPI:
         assert filtered[2]["name"] == "Test4"
 
     @patch("src.api.hh_api.requests.get")
-    def test_get_vacancies_unexpected_exception(self, mock_get: Mock) -> None:
+    def test_get_vacancies_unexpected_exception(self, mock_get: Mock, headhunter_api: HeadHunterAPI) -> None:
         """Тест обработки неожиданного исключения."""
         connect_response = Mock()
         connect_response.status_code = 200
@@ -242,13 +231,12 @@ class TestHeadHunterAPI:
 
         mock_get.side_effect = [connect_response, response_page1]
 
-        api = HeadHunterAPI()
-        vacancies = api.get_vacancies("Python")
+        vacancies = headhunter_api.get_vacancies("Python")
 
         assert vacancies == []
 
     @patch("src.api.hh_api.requests.get")
-    def test_get_vacancies_items_not_list(self, mock_get: Mock) -> None:
+    def test_get_vacancies_items_not_list(self, mock_get: Mock, headhunter_api: HeadHunterAPI) -> None:
         """Тест обработки ответа где items не является списком."""
         connect_response = Mock()
         connect_response.status_code = 200
@@ -261,13 +249,12 @@ class TestHeadHunterAPI:
 
         mock_get.side_effect = [connect_response, response_page1]
 
-        api = HeadHunterAPI()
-        vacancies = api.get_vacancies("Python")
+        vacancies = headhunter_api.get_vacancies("Python")
 
         assert vacancies == []
 
     @patch("src.api.hh_api.requests.get")
-    def test_get_vacancies_http_error(self, mock_get: Mock) -> None:
+    def test_get_vacancies_http_error(self, mock_get: Mock, headhunter_api: HeadHunterAPI) -> None:
         """Тест обработки HTTP ошибки при запросе."""
         import requests
 
@@ -280,7 +267,6 @@ class TestHeadHunterAPI:
         response_page1.raise_for_status.side_effect = requests.HTTPError("404 Not Found")
         mock_get.side_effect = [connect_response, response_page1]
 
-        api = HeadHunterAPI()
-        vacancies = api.get_vacancies("Python")
+        vacancies = headhunter_api.get_vacancies("Python")
 
         assert vacancies == []

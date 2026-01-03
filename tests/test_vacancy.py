@@ -86,24 +86,20 @@ class TestVacancy:
         assert vacancy1 == vacancy2
         assert vacancy3 == vacancy3  # Обе без зарплаты считаются равными
 
-    def test_vacancy_comparison_salary_range(self) -> None:
+    def test_vacancy_comparison_salary_range(self, vacancy_with_salary_range: Vacancy) -> None:
         """Тест сравнения вакансий с диапазоном зарплат."""
-        vacancy_range = Vacancy(
-            "Test Range", "https://test1.ru", {"from": 100000, "to": 150000, "currency": "RUR"}, "Desc"
-        )
         vacancy_fixed = Vacancy("Test Fixed", "https://test2.ru", {"from": 120000, "currency": "RUR"}, "Desc")
 
         # Средняя зарплата диапазона = 125000, фиксированная = 120000
-        assert vacancy_range > vacancy_fixed
+        assert vacancy_with_salary_range > vacancy_fixed
 
-    def test_vacancy_comparison_no_salary(self) -> None:
+    def test_vacancy_comparison_no_salary(self, vacancy_no_salary: Vacancy) -> None:
         """Тест сравнения вакансий без зарплаты."""
-        vacancy1 = Vacancy("Test1", "https://test1.ru", None, "Desc")
         vacancy2 = Vacancy("Test2", "https://test2.ru", None, "Desc")
         vacancy_with_salary = Vacancy("Test3", "https://test3.ru", {"from": 100000, "currency": "RUR"}, "Desc")
 
-        assert vacancy1 == vacancy2  # Обе без зарплаты
-        assert vacancy_with_salary > vacancy1  # С зарплатой больше чем без
+        assert vacancy_no_salary == vacancy2  # Обе без зарплаты
+        assert vacancy_with_salary > vacancy_no_salary  # С зарплатой больше чем без
 
     def test_vacancy_str(self, vacancy_object: Vacancy) -> None:
         """Тест строкового представления вакансии."""
@@ -197,17 +193,15 @@ class TestVacancy:
         # Средняя зарплата диапазона = 125000, одиночная = 120000
         assert vacancy > vacancy_single
 
-    def test_vacancy_get_salary_value_from_only(self) -> None:
+    def test_vacancy_get_salary_value_from_only(self, vacancy_no_salary: Vacancy) -> None:
         """Тест получения значения зарплаты только с from."""
         vacancy = Vacancy("Test", "https://test.ru", {"from": 100000, "currency": "RUR"}, "Desc")
-        vacancy_no_salary = Vacancy("Test2", "https://test2.ru", None, "Desc")
 
         assert vacancy > vacancy_no_salary
 
-    def test_vacancy_get_salary_value_to_only(self) -> None:
+    def test_vacancy_get_salary_value_to_only(self, vacancy_no_salary: Vacancy) -> None:
         """Тест получения значения зарплаты только с to."""
         vacancy = Vacancy("Test", "https://test.ru", {"to": 150000, "currency": "RUR"}, "Desc")
-        vacancy_no_salary = Vacancy("Test2", "https://test2.ru", None, "Desc")
 
         assert vacancy > vacancy_no_salary
 

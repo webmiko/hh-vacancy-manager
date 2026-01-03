@@ -19,7 +19,7 @@ HH Vacancy Manager — это консольное приложение для �
 - ✅ Фильтрация по валюте RUR (рубли)
 - ✅ Предотвращение дублирования вакансий при сохранении
 - ✅ Полная типизация кода
-- ✅ Покрытие тестами 87% (107 тестов)
+- ✅ Покрытие тестами 90% (116 тестов)
 - ✅ Соответствие принципам Zen of Python
 - ✅ Обработка ошибок с логированием
 - ✅ Проверка безопасности (защита от утечки конфиденциальных данных)
@@ -193,14 +193,14 @@ poetry run pytest --cov=src --cov-report=html
 
 ### Покрытие кода
 
-Проект имеет покрытие тестами **87%** (107 тестов, все проходят):
+Проект имеет покрытие тестами **90%** (116 тестов, все проходят):
 
-- `src/vacancy/vacancy.py`: 94%
-- `src/api/hh_api.py`: 90%
-- `src/user_interface.py`: 90%
-- `src/storage/json_saver.py`: 84%
+- `src/utils/vacancy_utils.py`: 100%
 - `src/utils/input_utils.py`: 100%
-- `src/utils/vacancy_utils.py`: 75%
+- `src/user_interface.py`: 94%
+- `src/vacancy/vacancy.py`: 94%
+- `src/storage/json_saver.py`: 89%
+- `src/api/hh_api.py`: 90%
 - `src/utils/security_utils.py`: 75%
 - `src/api/base.py`: 80%
 - `src/storage/base.py`: 77%

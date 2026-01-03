@@ -223,3 +223,71 @@ class TestUserInterface:
         # Должно продолжить работу несмотря на ошибку сохранения
         captured = capsys.readouterr()
         assert "Сохранено" in captured.out or "Топ" in captured.out
+
+    @patch("src.user_interface.HeadHunterAPI")
+    @patch("src.user_interface.Vacancy")
+    @patch("src.user_interface.JSONSaver")
+    @patch("builtins.input")
+    def test_user_interaction_save_value_error(
+        self,
+        mock_input: Mock,
+        mock_saver: Mock,
+        mock_vacancy: Mock,
+        mock_api: Mock,
+        sample_vacancies_list: list,
+        capsys: pytest.CaptureFixture,
+    ) -> None:
+        """Тест обработки ValueError при сохранении (критично для пользователя)."""
+        mock_api_instance = Mock()
+        mock_api_instance.get_vacancies.return_value = sample_vacancies_list
+        mock_api.return_value = mock_api_instance
+
+        mock_vacancy.cast_to_object_list.return_value = [
+            Vacancy("Test", "https://test.ru", None, "Desc")
+        ]
+
+        mock_saver_instance = Mock()
+        mock_saver_instance.add_vacancy.side_effect = ValueError("Invalid vacancy data")
+        mock_saver.return_value = mock_saver_instance
+
+        mock_input.side_effect = ["Python", "5", ""]
+
+        user_interaction()
+
+        # Должно продолжить работу несмотря на ошибку сохранения
+        captured = capsys.readouterr()
+        assert "Сохранено" in captured.out or "Топ" in captured.out
+
+    @patch("src.user_interface.HeadHunterAPI")
+    @patch("src.user_interface.Vacancy")
+    @patch("src.user_interface.JSONSaver")
+    @patch("builtins.input")
+    def test_user_interaction_save_attribute_error(
+        self,
+        mock_input: Mock,
+        mock_saver: Mock,
+        mock_vacancy: Mock,
+        mock_api: Mock,
+        sample_vacancies_list: list,
+        capsys: pytest.CaptureFixture,
+    ) -> None:
+        """Тест обработки AttributeError при сохранении (критично для пользователя)."""
+        mock_api_instance = Mock()
+        mock_api_instance.get_vacancies.return_value = sample_vacancies_list
+        mock_api.return_value = mock_api_instance
+
+        mock_vacancy.cast_to_object_list.return_value = [
+            Vacancy("Test", "https://test.ru", None, "Desc")
+        ]
+
+        mock_saver_instance = Mock()
+        mock_saver_instance.add_vacancy.side_effect = AttributeError("Missing attribute")
+        mock_saver.return_value = mock_saver_instance
+
+        mock_input.side_effect = ["Python", "5", ""]
+
+        user_interaction()
+
+        # Должно продолжить работу несмотря на ошибку сохранения
+        captured = capsys.readouterr()
+        assert "Сохранено" in captured.out or "Топ" in captured.out
