@@ -69,3 +69,6 @@ celerybeat.pid
 # SageMath parsed files
 *.sage.py
 
+# Локальные проекты
+Python-проекты/
+
