@@ -35,6 +35,7 @@ from src.vacancy.vacancy import Vacancy
 TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M:%S"
 FILE_WRITE_MODE = "w"
 ENCODING = "utf-8"
+MAX_INPUT_ATTEMPTS = 5  # Максимальное количество попыток ввода
 
 
 # 5. Приватные функции
@@ -130,12 +131,21 @@ def user_interaction() -> None:
     print("=" * 80 + "\n")
 
     # Ввод поискового запроса
-    search_query = input("Введите поисковый запрос для запроса вакансий из hh.ru: ").strip()
-
-    validated_query = validate_keyword(search_query)
+    validated_query = None
+    attempts = 0
+    while validated_query is None and attempts < MAX_INPUT_ATTEMPTS:
+        attempts += 1
+        search_query = input("Введите поисковый запрос для запроса вакансий из hh.ru: ").strip()
+        validated_query = validate_keyword(search_query)
+        if not validated_query:
+            print("\nОшибка: Поисковый запрос не может быть пустым.\n")
+            logger.warning("Пользователь ввел пустой поисковый запрос")
+            if attempts < MAX_INPUT_ATTEMPTS:
+                print(f"Попытка {attempts} из {MAX_INPUT_ATTEMPTS}. Попробуйте еще раз.\n")
+    
     if not validated_query:
-        print("\nОшибка: Поисковый запрос не может быть пустым.\n")
-        logger.warning("Пользователь ввел пустой поисковый запрос")
+        print("\nПревышено максимальное количество попыток ввода. Программа завершена.\n")
+        logger.error("Превышено максимальное количество попыток ввода поискового запроса")
         return
 
     logger.info(f"Поисковый запрос: {validated_query}")
@@ -189,12 +199,21 @@ def user_interaction() -> None:
     print(f"Сохранено вакансий в файл: {saved_count} из {len(vacancies)}")
 
     # Ввод количества вакансий для топа
-    top_n_input = input("\nВведите количество вакансий для вывода в топ N: ").strip()
-
-    top_n = validate_top_n(top_n_input)
+    top_n = None
+    attempts = 0
+    while top_n is None and attempts < MAX_INPUT_ATTEMPTS:
+        attempts += 1
+        top_n_input = input("\nВведите количество вакансий для вывода в топ N: ").strip()
+        top_n = validate_top_n(top_n_input)
+        if not top_n:
+            print("\nОшибка: Введите корректное число от 1 до 1000.\n")
+            logger.warning(f"Некорректный ввод для топ N: {top_n_input}")
+            if attempts < MAX_INPUT_ATTEMPTS:
+                print(f"Попытка {attempts} из {MAX_INPUT_ATTEMPTS}. Попробуйте еще раз.\n")
+    
     if not top_n:
-        print("\nОшибка: Введите корректное число от 1 до 1000.\n")
-        logger.warning(f"Некорректный ввод для топ N: {top_n_input}")
+        print("\nПревышено максимальное количество попыток ввода. Программа завершена.\n")
+        logger.error("Превышено максимальное количество попыток ввода для топ N")
         return
 
     # Ввод ключевых слов для фильтрации
