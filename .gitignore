@@ -69,3 +69,6 @@ celerybeat.pid
 # SageMath parsed files
 *.sage.py
 
+# База знаний проекта (не должна коммититься)
+Python-проекты/
+
